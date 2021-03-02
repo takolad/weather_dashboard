@@ -9,6 +9,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" 
     rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" 
     crossorigin="anonymous">
+    <!-- Fontawesome -->
+    <script src="https://kit.fontawesome.com/8e2b88446c.js" crossorigin="anonymous"></script>
+    <!-- Our styling -->
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -21,13 +24,26 @@
         </header>
 
         <main class="row w-100 m-0 mt-3">
-            <div class="col-md-3">
-                <p>Search bar goes here.</p>
-                <p>As well as a "list" of cities</p>
+            <div class="col-md-4">
+                <h4>Search for a City:</h4>
+                <form class="d-flex mb-3">
+                    <input class="form-control" type="text" name="search">
+                    <button type="submit"><i class="fa fa-search"></i></button>
+                </form>
+
+                <div class="searchHistory">
+                    <ul class="list-group historyList">
+                        <!-- These are temporary and will later be dynamically set (including links) TBD -->
+                        <li class="list-group-item">San Francisco</li>
+                        <li class="list-group-item">Houston</li>
+                        <li class="list-group-item">Indianapolis</li>
+                        <li class="list-group-item">Tacoma</li>
+                    </ul>
+                </div>
             </div>
-            <div class="col-md-9">
+            <div class="col-md-8">
                 <p>Testing testing</p>
-                <div class="col-md-9">
+                <div class="col-md-8">
                     <p>Testing testing</p>
                 </div>
             </div>

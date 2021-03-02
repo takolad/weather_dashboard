@@ -6,3 +6,18 @@ main {
     position: absolute;
     top: 5rem;
 }
+
+input[name='search'] {
+    width: 80%;
+    margin: 0;
+    float: left;
+}
+
+button[type='submit'] {
+    width: 20%;
+    height: auto;
+    border-radius: .25rem;
+    float: left;
+    background-color: #2196F3;
+    color: white;
+}
