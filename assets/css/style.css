@@ -21,3 +21,21 @@ button[type='submit'] {
     background-color: #2196F3;
     color: white;
 }
+
+.uvIndex {
+    background-color: red;
+    border: 1px solid black;
+    border-radius: .25rem;
+}
+
+span {
+    display: block;
+}
+
+.uv, .uvIndex {
+    display: inline;
+}
+
+.fiveDays{
+    /* stuff */
+}
