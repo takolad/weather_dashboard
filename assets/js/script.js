@@ -74,6 +74,7 @@ var apiFiveDayUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${cityNa
 // list[i].main.temp
 // list[i].main.humidity
 // list[i].weather.icon
+var apiIconUrl = `http://openweathermap.org/img/wn/${weather.icon}@2x.png`;
 
 var formSearchEl = $('.searchForm');
 
@@ -93,15 +94,16 @@ function getCurrentWeather() {
         .then(function (response) {
             if (response.ok) {
                 response.json().then(function (data) {
-                    coord.lon = data.coord.lon;
                     coord.lat = data.coord.lat;
-                    weather.icon = data.weather.icon;
+                    coord.lon = data.coord.lon;
+                    weather.icon = data.weather[0].icon;
                     main.temp = data.main.temp;
                     main.humidity = data.main.humidity;
                     wind.speed = data.wind.speed;
                     apiUvUrl = `https://api.openweathermap.org/data/2.5/onecall?lat=${coord.lat}&lon=${coord.lon}&exclude={minutely,hourly,daily,alerts}&units=imperial&appid=${key}`;
-                    getUvIndex(coord.latitude, coord.longitude);
-                    displayCurrWeather();   // not yet functional
+                    apiIconUrl = `http://openweathermap.org/img/wn/${weather.icon}@2x.png`;
+                    getUvIndex(coord.lat, coord.lon);
+                    displayCurrWeather();   // simply logs to console atm
                 });
             } else {
                 alert('Error: ' + response.statusText);
@@ -130,11 +132,14 @@ function getUvIndex(latitude, longitude) {
 }
 
 function displayCurrWeather() {
-    console.log("current iconId: " + weather.icon);
-    console.log("current temp: " + main.temp);
-    console.log("current humidity: " + main.hummidity);
-    console.log("current wind: " + wind.speed);
-    console.log("current uvIndex: " + uvIndex.uvi);
+    // console.log("coords: lon: " + coord.lon + ", lat: " + coord.lat);
+    // console.log("current iconId: " + weather.icon);
+    // console.log("current temp: " + main.temp);
+    // console.log("current humidity: " + main.humidity);
+    // console.log("current wind: " + wind.speed);
+    // console.log("current uvIndex: " + uvIndex.uvi);
+    currCityDateFieldEl.val(`${cityName} (${Date.now()})`);
+    currUvIndFieldEl.removeClass('d-none');
 }
 
 
