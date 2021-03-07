@@ -1,4 +1,5 @@
 // HTML Element Handlers
+var formSearchEl = $('.searchForm');
 var currTempFieldEl = $('.temperature');
 var currCityDateFieldEl = $('.cityDate');
 var currHumidFieldEl = $('.humidity');
@@ -98,18 +99,18 @@ var apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${cityNameUri}&u
 var apiUvUrl = `https://api.openweathermap.org/data/2.5/onecall?lat=${coord.lat}&lon=${coord.lon}&exclude={minutely,hourly,daily,alerts}&units=imperial&appid=${key}`;
 // owm - five day api
 var apiFiveDayUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${cityNameUri}&units=imperial&appid=${key}`;
-// list[i].dt
-// list[i].main.temp
-// list[i].main.humidity
-// list[i].weather.icon
+// owm - url for weather icon
 var iconUrl = `http://openweathermap.org/img/wn/${weather.icon}@2x.png`;
-
-var formSearchEl = $('.searchForm');
 
 
 var formSubmitHandler = function (event) {
     event.preventDefault();
-
+    // // clears weekly weather upon new 
+    // dayOneEl.text("");
+    // dayTwoEl.text("");
+    // dayThreeEl.text("");
+    // dayFourEl.text("");
+    // dayFiveEl.text("");
     cityName = $('input[name="search"').val().trim();
     // if previously searched for, removes from array and pushes to the end so it is most recent search
     if (savedSearches.includes(cityName)) {
@@ -123,7 +124,6 @@ var formSubmitHandler = function (event) {
     cityNameUri = cityName.replace(" ", "%20");
     getCurrentWeather();
     getWeeklyWeather();
-    allWeatherEl.removeClass('d-none');
 };
 
 function getCurrentWeather() {
@@ -174,7 +174,7 @@ function getUvIndex(latitude, longitude) {
 
 function displayCurrWeather() {
     // Get|Set Date
-    var dtInMs = dt * 1000;
+    let dtInMs = dt * 1000;
     const dateObject = new Date(dtInMs);
     var todaysDate = dateObject.toLocaleDateString({month: "numeric", day: "numeric", year: "numeric"});
 
@@ -211,11 +211,15 @@ function getWeeklyWeather () {
         .then(function (response) {
             if (response.ok) {
                 response.json().then(function (data) {
-                    for (var i = 0; i < 5; i++) {
+                    console.log(data);
+                    for (var i = 0; i < 5; i++) {   // will need to change increment or search for ideal entry
                         // get|set date
-                        const dateObject = new Date(data.list[i].dt * 1000);    // issue, date not properly set, repeats todays day
-                        fiveDayStats[i].date = dateObject.toLocaleDateString({month: "numeric", day: "numeric", year: "numeric"});
-                        fiveDayStats[i].icon = data.list[i].weather[0].icon; // test, see if weather is an array like in single day
+                        let dtInMs = data.list[i].dt * 1000;
+                        const dateWkObject = new Date(dtInMs);  // issue, date not properly set, repeats todays day
+                                                                // issues caused by improper array accessing
+                                                                // array carries 40 elements instead of supposed 5
+                        fiveDayStats[i].date = dateWkObject.toLocaleDateString({month: "numeric", day: "numeric", year: "numeric"});
+                        fiveDayStats[i].icon = data.list[i].weather[0].icon;
                         fiveDayStats[i].desc = data.list[i].weather[0].description;
                         fiveDayStats[i].temp = data.list[i].main.temp;
                         fiveDayStats[i].humidity = data.list[i].main.humidity;
@@ -228,8 +232,9 @@ function getWeeklyWeather () {
         })
         .catch(function (error) {
             alert('Unable to connect to Open Weather Map');
-        });
-
+            });
+    
+    allWeatherEl.removeClass('d-none');
 }
 
 // issue: new searches are appended to previous forecast, also incorrect date
@@ -248,30 +253,35 @@ function displayWeeklyWeather () {
 
         switch(i) {
             case 0:
+                dayOneEl.text("");
                 dayOneEl.append(weeklyDateEl);
                 dayOneEl.append(weeklyIconEl);
                 dayOneEl.append(weeklyTempEl);
                 dayOneEl.append(weeklyHumidEl);
                 break;
             case 1:
+                dayTwoEl.text("");
                 dayTwoEl.append(weeklyDateEl);
                 dayTwoEl.append(weeklyIconEl);
                 dayTwoEl.append(weeklyTempEl);
                 dayTwoEl.append(weeklyHumidEl);
                 break;
             case 2:
+                dayThreeEl.text("");
                 dayThreeEl.append(weeklyDateEl);
                 dayThreeEl.append(weeklyIconEl);
                 dayThreeEl.append(weeklyTempEl);
                 dayThreeEl.append(weeklyHumidEl);
                 break;
             case 3:
+                dayFourEl.text("");
                 dayFourEl.append(weeklyDateEl);
                 dayFourEl.append(weeklyIconEl);
                 dayFourEl.append(weeklyTempEl);
                 dayFourEl.append(weeklyHumidEl);
                 break;
             case 4:
+                dayFiveEl.text("");
                 dayFiveEl.append(weeklyDateEl);
                 dayFiveEl.append(weeklyIconEl);
                 dayFiveEl.append(weeklyTempEl);
