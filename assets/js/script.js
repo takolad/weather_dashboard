@@ -5,6 +5,13 @@ var currHumidFieldEl = $('.humidity');
 var currWindFieldEl = $('.wind');
 var currUvIndFieldEl = $('.uvIndex');
 var currWeatherIconEl = $('weatherIcon');
+var weatherHistoryEl = $('.historyList');
+var dayOneEl = $('.dayOne');
+var dayTwoEl = $('.dayTwo');
+var dayThreeEl = $('.dayThree');
+var dayFourEl = $('.dayFour');
+var dayFiveEl = $('.dayFive');
+var allWeatherEl = $('.allWeather');
 
 
 var key = config.OWM_API_KEY;
@@ -36,34 +43,50 @@ var fiveDayStats = [
     {
         date: "",
         icon: "",
+        desc: "",
         temp: 0,
         humidity: 0,
     },
     {
         date: "",
         icon: "",
+        desc: "",
         temp: 0,
         humidity: 0,
     },
     {
         date: "",
         icon: "",
+        desc: "",
         temp: 0,
         humidity: 0,
     },
     {
         date: "",
         icon: "",
+        desc: "",
         temp: 0,
         humidity: 0,
     },
     {
         date: "",
         icon: "",
+        desc: "",
         temp: 0,
         humidity: 0,
     },
 ]
+
+var savedSearches = JSON.parse(localStorage.getItem('searches'));
+
+if (typeof(savedSearches) === 'undefined' || savedSearches === null) {
+    savedSearches = new Array();
+} else {
+    for (var i = savedSearches.length - 1; i >= 0; i--) {
+        var listEl = $('<li>').attr('class', 'list-group-item').text(savedSearches[i]);
+        weatherHistoryEl.append(listEl);
+    }
+}
 
 //////////////////////////
 // Open Weather Map API //
@@ -88,8 +111,19 @@ var formSubmitHandler = function (event) {
     event.preventDefault();
 
     cityName = $('input[name="search"').val().trim();
+    // if previously searched for, removes from array and pushes to the end so it is most recent search
+    if (savedSearches.includes(cityName)) {
+        var index = savedSearches.indexOf(cityName);
+        savedSearches.splice(index, 1);
+        savedSearches.push(cityName);
+    } else {
+        // if not already searched for adds to end of array
+        savedSearches.push(cityName);
+    }
     cityNameUri = cityName.replace(" ", "%20");
     getCurrentWeather();
+    getWeeklyWeather();
+    allWeatherEl.removeClass('d-none');
 };
 
 function getCurrentWeather() {
@@ -110,7 +144,7 @@ function getCurrentWeather() {
                     iconUrl = `http://openweathermap.org/img/wn/${weather.icon}@2x.png`;
                     weather.desc = data.weather[0].description;
                     getUvIndex(coord.lat, coord.lon);
-                    displayCurrWeather();   // simply logs to console atm
+                    displayCurrWeather();
                 });
             } else {
                 alert('Error: ' + response.statusText);
@@ -139,9 +173,11 @@ function getUvIndex(latitude, longitude) {
 }
 
 function displayCurrWeather() {
+    // Get|Set Date
     var dtInMs = dt * 1000;
     const dateObject = new Date(dtInMs);
     var todaysDate = dateObject.toLocaleDateString({month: "numeric", day: "numeric", year: "numeric"});
+
     currCityDateFieldEl.text(`${cityName} (${todaysDate})`);
     currCityDateFieldEl.append($('<img>').attr({'src':`${iconUrl}`,'alt':`${weather.desc}`}).css('width','50px'));
     currTempFieldEl.text(`Temperature: ${main.temp} \u00B0F`);
@@ -162,6 +198,87 @@ function displayCurrWeather() {
     }
     currUvIndFieldEl.append($('<span>').addClass('uv').css('background-color',`${bgColor}`));
     $('.uv').text(`${uvIndex.uvi}`);
+
+    // displayWeekWeather();
+    localStorage.setItem('searches', JSON.stringify(savedSearches));
+}
+
+// displays 5 day weather
+function getWeeklyWeather () {
+    apiFiveDayUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${cityNameUri}&units=imperial&appid=${key}`;
+
+    fetch(apiFiveDayUrl)
+        .then(function (response) {
+            if (response.ok) {
+                response.json().then(function (data) {
+                    for (var i = 0; i < 5; i++) {
+                        // get|set date
+                        const dateObject = new Date(data.list[i].dt * 1000);    // issue, date not properly set, repeats todays day
+                        fiveDayStats[i].date = dateObject.toLocaleDateString({month: "numeric", day: "numeric", year: "numeric"});
+                        fiveDayStats[i].icon = data.list[i].weather[0].icon; // test, see if weather is an array like in single day
+                        fiveDayStats[i].desc = data.list[i].weather[0].description;
+                        fiveDayStats[i].temp = data.list[i].main.temp;
+                        fiveDayStats[i].humidity = data.list[i].main.humidity;
+                    }
+                    displayWeeklyWeather();
+                });
+            } else {
+                alert('Error: ' + response.statusText);
+            }
+        })
+        .catch(function (error) {
+            alert('Unable to connect to Open Weather Map');
+        });
+
+}
+
+// issue: new searches are appended to previous forecast, also incorrect date
+function displayWeeklyWeather () {
+    for (var i = 0; i < 5; i++) {
+        let weeklyDateEl = $('<h5>').attr('class',`day${i+1}Date`);
+        let weeklyIconEl = $('<span>').attr('class',`day${i+1}Icon`);
+        let weeklyIconUrl = `http://openweathermap.org/img/wn/${fiveDayStats[i].icon}@2x.png`;
+        weeklyIconEl.append($('<img>').attr({'src':`${weeklyIconUrl}`,'alt':`${fiveDayStats[i].desc}`}).css('width','50px'));
+        let weeklyTempEl = $('<span>').attr('class',`day${i+1}Temp`);
+        let weeklyHumidEl = $('<span>').attr('class',`day${i+1}Humidity`);
+
+        weeklyDateEl.text(fiveDayStats[i].date);
+        weeklyTempEl.text(`Temp: ${fiveDayStats[i].temp} \u00B0F`)
+        weeklyHumidEl.text(`Humidity: ${fiveDayStats[i].humidity}%`);
+
+        switch(i) {
+            case 0:
+                dayOneEl.append(weeklyDateEl);
+                dayOneEl.append(weeklyIconEl);
+                dayOneEl.append(weeklyTempEl);
+                dayOneEl.append(weeklyHumidEl);
+                break;
+            case 1:
+                dayTwoEl.append(weeklyDateEl);
+                dayTwoEl.append(weeklyIconEl);
+                dayTwoEl.append(weeklyTempEl);
+                dayTwoEl.append(weeklyHumidEl);
+                break;
+            case 2:
+                dayThreeEl.append(weeklyDateEl);
+                dayThreeEl.append(weeklyIconEl);
+                dayThreeEl.append(weeklyTempEl);
+                dayThreeEl.append(weeklyHumidEl);
+                break;
+            case 3:
+                dayFourEl.append(weeklyDateEl);
+                dayFourEl.append(weeklyIconEl);
+                dayFourEl.append(weeklyTempEl);
+                dayFourEl.append(weeklyHumidEl);
+                break;
+            case 4:
+                dayFiveEl.append(weeklyDateEl);
+                dayFiveEl.append(weeklyIconEl);
+                dayFiveEl.append(weeklyTempEl);
+                dayFiveEl.append(weeklyHumidEl);
+                break;
+        }
+   }
 
 }
 

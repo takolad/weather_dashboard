@@ -35,15 +35,10 @@
 
                 <div class="searchHistory">
                     <ul class="list-group historyList">
-                        <!-- These are temporary and will later be dynamically set (including links) TBD -->
-                        <li class="list-group-item">San Francisco</li>
-                        <li class="list-group-item">Houston</li>
-                        <li class="list-group-item">Indianapolis</li>
-                        <li class="list-group-item">Tacoma</li>
                     </ul>
                 </div>
             </div>
-            <div class="col-md-8"> <!-- consider hiding until user submits search -->
+            <div class="col-md-8 d-none allWeather"> <!-- consider hiding until user submits search -->
                 <div class="col-12 border border-secondary rounded mb-3 p-3" id="currentWeather">
                     <h2 class="cityDate"><span class="weatherIcon"></span></h2>
                     <span class="temperature"></span>
@@ -53,7 +48,7 @@
                 </div>
                 <div class="col-12">
                     <h2>5-Day Forecast:</h2>
-                    <div class="col-12 fiveDays">
+                    <div class="col-12 fiveDays d-flex">
                         <span class="dayOne"></span>
                         <span class="dayTwo"></span>
                         <span class="dayThree"></span>

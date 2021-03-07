@@ -22,7 +22,7 @@ button[type='submit'] {
     color: white;
 }
 
-#currentWeather {
+#currentWeather, .fiveDays {
     line-height: 2.5rem;
 }
 
@@ -41,5 +41,15 @@ span {
 }
 
 .fiveDays{
-    margin: 0 2rem;
+    /* margin: 0 2rem; */
+    white-space: nowrap;
+}
+
+.dayOne, .dayTwo, .dayThree,
+.dayFour, .dayFive {
+    padding: .5rem 1rem;
+    background-color: #2196F3;
+    margin: 0 .75rem;
+    border-radius: .25rem;
+    text-align: start;
 }
