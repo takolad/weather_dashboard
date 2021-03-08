@@ -105,12 +105,7 @@ var iconUrl = `http://openweathermap.org/img/wn/${weather.icon}@2x.png`;
 
 var formSubmitHandler = function (event) {
     event.preventDefault();
-    // // clears weekly weather upon new 
-    // dayOneEl.text("");
-    // dayTwoEl.text("");
-    // dayThreeEl.text("");
-    // dayFourEl.text("");
-    // dayFiveEl.text("");
+    
     cityName = $('input[name="search"').val().trim();
     // if previously searched for, removes from array and pushes to the end so it is most recent search
     if (savedSearches.includes(cityName)) {
@@ -212,17 +207,23 @@ function getWeeklyWeather () {
             if (response.ok) {
                 response.json().then(function (data) {
                     console.log(data);
-                    for (var i = 0; i < 5; i++) {   // will need to change increment or search for ideal entry
+                    for (var i = 0, k = 0; i < 5; i++) {
                         // get|set date
-                        let dtInMs = data.list[i].dt * 1000;
-                        const dateWkObject = new Date(dtInMs);  // issue, date not properly set, repeats todays day
-                                                                // issues caused by improper array accessing
-                                                                // array carries 40 elements instead of supposed 5
+                        for (var j = 0; j < 8; j++) {
+                            if (!data.list[k].dt_txt.includes('12:00')) { // needs additional logic to skip current day
+                                k++;
+                            } else {
+                                break;
+                            }
+                        }
+                        let dtInMs = data.list[k].dt * 1000;
+                        const dateWkObject = new Date(dtInMs);
                         fiveDayStats[i].date = dateWkObject.toLocaleDateString({month: "numeric", day: "numeric", year: "numeric"});
-                        fiveDayStats[i].icon = data.list[i].weather[0].icon;
-                        fiveDayStats[i].desc = data.list[i].weather[0].description;
-                        fiveDayStats[i].temp = data.list[i].main.temp;
-                        fiveDayStats[i].humidity = data.list[i].main.humidity;
+                        fiveDayStats[i].icon = data.list[k].weather[0].icon;
+                        fiveDayStats[i].desc = data.list[k].weather[0].description;
+                        fiveDayStats[i].temp = data.list[k].main.temp;
+                        fiveDayStats[i].humidity = data.list[k].main.humidity;
+                        k += 8;
                     }
                     displayWeeklyWeather();
                 });
