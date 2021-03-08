@@ -14,14 +14,17 @@ var dayFourEl = $('.dayFour');
 var dayFiveEl = $('.dayFive');
 var allWeatherEl = $('.allWeather');
 
-
+// hopefully obscures api key :D
 var key = config.OWM_API_KEY;
+
+// to hold city information
 var cityName = "";
 var cityNameUri = "";
 var coord = {
     lon: 0,
     lat: 0,
 };
+// to hold current weather information
 var weather = {
     icon: "",
     desc: "",
@@ -39,7 +42,9 @@ var uvIndex = {
 
 // Time of data calculation, unix, UTC
 var dt = 0;
+var timeZone = 0;
 
+// will hold the 5 day weather information
 var fiveDayStats = [
     {
         date: "",
@@ -78,6 +83,7 @@ var fiveDayStats = [
     },
 ]
 
+// localStorage
 var savedSearches = JSON.parse(localStorage.getItem('searches'));
 
 if (typeof(savedSearches) === 'undefined' || savedSearches === null) {
@@ -135,6 +141,7 @@ function getCurrentWeather() {
                     main.humidity = data.main.humidity;
                     wind.speed = data.wind.speed;
                     dt = data.dt;
+                    timeZone = data.timezone;
                     apiUvUrl = `https://api.openweathermap.org/data/2.5/onecall?lat=${coord.lat}&lon=${coord.lon}&exclude={minutely,hourly,daily,alerts}&units=imperial&appid=${key}`;
                     iconUrl = `http://openweathermap.org/img/wn/${weather.icon}@2x.png`;
                     weather.desc = data.weather[0].description;
@@ -169,16 +176,20 @@ function getUvIndex(latitude, longitude) {
 
 function displayCurrWeather() {
     // Get|Set Date
+    dt += timeZone; // adjusts for timezone
     let dtInMs = dt * 1000;
     const dateObject = new Date(dtInMs);
     var todaysDate = dateObject.toLocaleDateString({month: "numeric", day: "numeric", year: "numeric"});
 
+    // sets up data to be appended to web page
     currCityDateFieldEl.text(`${cityName} (${todaysDate})`);
     currCityDateFieldEl.append($('<img>').attr({'src':`${iconUrl}`,'alt':`${weather.desc}`}).css('width','50px'));
     currTempFieldEl.text(`Temperature: ${main.temp} \u00B0F`);
     currHumidFieldEl.text(`Humidity: ${main.humidity}%`);
     currWindFieldEl.text(`Wind Speed: ${wind.speed} MPH`);
     currUvIndFieldEl.text('UV Index: ');
+
+    // sets background color based off severity of UV
     let bgColor = '';
     if (uvIndex.uvi >= 0 && uvIndex.uvi < 3) {
         bgColor = 'green';
@@ -189,12 +200,12 @@ function displayCurrWeather() {
     } else if (uvIndex.uvi >= 8 && uvIndex.uvi < 11) {
         bgColor = 'red';
     } else {
-        bgColor = 'purple';
+        bgColor = 'purple'; // training for Mars :P
     }
     currUvIndFieldEl.append($('<span>').addClass('uv').css('background-color',`${bgColor}`));
     $('.uv').text(`${uvIndex.uvi}`);
 
-    // displayWeekWeather();
+    // saves cities to localStorage
     localStorage.setItem('searches', JSON.stringify(savedSearches));
 }
 
@@ -206,18 +217,18 @@ function getWeeklyWeather () {
         .then(function (response) {
             if (response.ok) {
                 response.json().then(function (data) {
-                    console.log(data);
+                    /*
+                        Time Zones complicate this section. Unsure how to logically/dynamically set first
+                        result as the following day.
+                    */
                     for (var i = 0, k = 0; i < 5; i++) {
                         // get|set date
-                        for (var j = 0; j < 8; j++) {
-                            if (!data.list[k].dt_txt.includes('12:00')) { // needs additional logic to skip current day
-                                k++;
-                            } else {
-                                break;
-                            }
-                        }
-                        let dtInMs = data.list[k].dt * 1000;
+                        let dt = data.list[k].dt;
+                        dt += timeZone;
+                        let dtInMs = dt * 1000;
                         const dateWkObject = new Date(dtInMs);
+
+                        // sets weekly weather information
                         fiveDayStats[i].date = dateWkObject.toLocaleDateString({month: "numeric", day: "numeric", year: "numeric"});
                         fiveDayStats[i].icon = data.list[k].weather[0].icon;
                         fiveDayStats[i].desc = data.list[k].weather[0].description;
@@ -238,7 +249,6 @@ function getWeeklyWeather () {
     allWeatherEl.removeClass('d-none');
 }
 
-// issue: new searches are appended to previous forecast, also incorrect date
 function displayWeeklyWeather () {
     for (var i = 0; i < 5; i++) {
         let weeklyDateEl = $('<h5>').attr('class',`day${i+1}Date`);
@@ -252,6 +262,7 @@ function displayWeeklyWeather () {
         weeklyTempEl.text(`Temp: ${fiveDayStats[i].temp} \u00B0F`)
         weeklyHumidEl.text(`Humidity: ${fiveDayStats[i].humidity}%`);
 
+        // appends weather to matching element of [index to (day-1)]
         switch(i) {
             case 0:
                 dayOneEl.text("");
@@ -297,3 +308,13 @@ function displayWeeklyWeather () {
 
 // form submit handler
 formSearchEl.on('submit', formSubmitHandler);
+
+// click event handler
+$(document).ready(function() {
+    weatherHistoryEl.on('click', function (event) {
+        cityName = event.target.textContent;
+        cityNameUri = cityName.replace(" ", "%20");
+        getCurrentWeather();
+        getWeeklyWeather();
+    });
+});
