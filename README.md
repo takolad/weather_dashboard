@@ -1,7 +1,7 @@
 # weather_dashboard
 
 ## Description
-    Utilizing third-party APIs to access and display weather information in a web page dashboard.
+    This is a weather outlook page for the purpose of planning a trip. The site utilizes the third-party API, OpenWeather, to access and display weather information in a web based dashboard.
 
 ## Site Screenshot
    ![Site Screenshot](assets/images/screen1.png)
