@@ -14,7 +14,7 @@ var dayFourEl = $('.dayFour');
 var dayFiveEl = $('.dayFive');
 var allWeatherEl = $('.allWeather');
 
-// hopefully obscures api key :D
+// needs to be obscured at some point (from public)
 var key = '5414d0440b699cd577aca3c70d52067f';
 
 // to hold city information
