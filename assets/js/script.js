@@ -15,7 +15,7 @@ var dayFiveEl = $('.dayFive');
 var allWeatherEl = $('.allWeather');
 
 // hopefully obscures api key :D
-var key = config.OWM_API_KEY;
+var key = '5414d0440b699cd577aca3c70d52067f';
 
 // to hold city information
 var cityName = "";
