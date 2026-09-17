@@ -9,21 +9,6 @@ main {
 
 input[name='search'] {
     width: 80%;
-    margin: 0;
-    float: left;
-}
-
-button[type='submit'] {
-    width: 20%;
-    height: auto;
-    border-radius: .25rem;
-    float: left;
-    background-color: #2196F3;
-    color: white;
-}
-
-#currentWeather, .fiveDays {
-    line-height: 2.5rem;
 }
 
 .uv {
@@ -40,16 +25,10 @@ span {
     display: inline;
 }
 
-.fiveDays{
-    /* margin: 0 2rem; */
-    white-space: nowrap;
-}
 
-.dayOne, .dayTwo, .dayThree,
-.dayFour, .dayFive {
+.day-card {
     padding: .5rem 1rem;
     background-color: #2196F3;
-    margin: 0 .75rem;
     border-radius: .25rem;
     text-align: start;
 }

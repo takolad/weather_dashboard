@@ -7,12 +7,12 @@ var currWindFieldEl = $('.wind');
 var currUvIndFieldEl = $('.uvIndex');
 var currWeatherIconEl = $('weatherIcon');
 var weatherHistoryEl = $('.historyList');
-var dayOneEl = $('.dayOne');
-var dayTwoEl = $('.dayTwo');
-var dayThreeEl = $('.dayThree');
-var dayFourEl = $('.dayFour');
-var dayFiveEl = $('.dayFive');
-var allWeatherEl = $('.allWeather');
+var dayOneEl = $('#dayOne');
+var dayTwoEl = $('#dayTwo');
+var dayThreeEl = $('#dayThree');
+var dayFourEl = $('#dayFour');
+var dayFiveEl = $('#dayFive');
+var allWeatherEl = $('#allWeather');
 
 // needs to be obscured at some point (from public)
 var key = '5414d0440b699cd577aca3c70d52067f';
@@ -90,8 +90,7 @@ if (typeof(savedSearches) === 'undefined' || savedSearches === null) {
     savedSearches = new Array();
 } else {
     for (var i = savedSearches.length - 1; i >= 0; i--) {
-        var listEl = $('<li>').attr('class', 'list-group-item').text(savedSearches[i]);
-        weatherHistoryEl.append(listEl);
+        addLocationToHistory(savedSearches[i]);
     }
 }
 
@@ -113,27 +112,29 @@ var formSubmitHandler = function (event) {
     event.preventDefault();
     
     cityName = $('input[name="search"').val().trim();
-    // if previously searched for, removes from array and pushes to the end so it is most recent search
-    if (savedSearches.includes(cityName)) {
-        var index = savedSearches.indexOf(cityName);
-        savedSearches.splice(index, 1);
-        savedSearches.push(cityName);
-    } else {
-        // if not already searched for adds to end of array
-        savedSearches.push(cityName);
+
+    if (cityName.length === 0) {
+        alert('Please enter a city name');
+        return;
     }
+
+    cityName = cityName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+
     cityNameUri = cityName.replace(" ", "%20");
-    getCurrentWeather();
-    getWeeklyWeather();
+    getCurrentWeather().then(function (cityIsValid) {
+        if (cityIsValid) {
+            getWeeklyWeather();
+        }
+    });
 };
 
 function getCurrentWeather() {
     apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${cityNameUri}&units=imperial&appid=${key}`;
 
-    fetch(apiUrl)
+    return fetch(apiUrl)
         .then(function (response) {
             if (response.ok) {
-                response.json().then(function (data) {
+                return response.json().then(function (data) {
                     coord.lat = data.coord.lat;
                     coord.lon = data.coord.lon;
                     weather.icon = data.weather[0].icon;
@@ -145,17 +146,34 @@ function getCurrentWeather() {
                     apiUvUrl = `https://api.openweathermap.org/data/2.5/onecall?lat=${coord.lat}&lon=${coord.lon}&exclude={minutely,hourly,daily,alerts}&units=imperial&appid=${key}`;
                     iconUrl = `http://openweathermap.org/img/wn/${weather.icon}@2x.png`;
                     weather.desc = data.weather[0].description;
+                    saveSearch();
                     getUvIndex(coord.lat, coord.lon);
                     displayCurrWeather();
+                    return true;
                 });
             } else {
                 alert('Error: ' + response.statusText);
+                return false;
             }
         })
         .catch(function (error) {
             alert('Unable to connect to Open Weather Map');
+            return false;
         });
 };
+
+function saveSearch() {
+    if (savedSearches.includes(cityName)) {
+        var index = savedSearches.indexOf(cityName);
+        savedSearches.splice(index, 1);
+    }
+    savedSearches.push(cityName);
+    localStorage.setItem('searches', JSON.stringify(savedSearches));
+
+    if (!weatherHistoryEl.text().includes(cityName)) {
+        addLocationToHistory(cityName);
+    }
+}
 
 function getUvIndex(latitude, longitude) {
     fetch(apiUvUrl)
@@ -166,7 +184,13 @@ function getUvIndex(latitude, longitude) {
                     uvIndex.uvi = data.current.uvi;
                 });
             } else {
-                alert('Error: ' + response.statusText);
+                if (response.statusText === 'Unauthorized') {
+                    console.warn('API key is invalid or lacks permissions for this endpoint.');
+                    console.info('Hiding UV Index field due to lack of permissions.');
+                    currUvIndFieldEl.addClass('d-none');
+                } else {
+                    alert('Error: ' + response.statusText);
+                }
             }
         })
         .catch(function (error) {
@@ -205,8 +229,6 @@ function displayCurrWeather() {
     currUvIndFieldEl.append($('<span>').addClass('uv').css('background-color',`${bgColor}`));
     $('.uv').text(`${uvIndex.uvi}`);
 
-    // saves cities to localStorage
-    localStorage.setItem('searches', JSON.stringify(savedSearches));
 }
 
 // displays 5 day weather
@@ -300,11 +322,14 @@ function displayWeeklyWeather () {
                 dayFiveEl.append(weeklyHumidEl);
                 break;
         }
-   }
+    }
 
 }
 
-
+function addLocationToHistory(location) {
+    let listEl = $('<li>').attr('class', 'list-group-item').text(location);
+    weatherHistoryEl.append(listEl);
+}
 
 // form submit handler
 formSearchEl.on('submit', formSubmitHandler);
@@ -314,7 +339,10 @@ $(document).ready(function() {
     weatherHistoryEl.on('click', function (event) {
         cityName = event.target.textContent;
         cityNameUri = cityName.replace(" ", "%20");
-        getCurrentWeather();
-        getWeeklyWeather();
+        getCurrentWeather().then(function (cityIsValid) {
+            if (cityIsValid) {
+                getWeeklyWeather();
+            }
+        });
     });
 });
