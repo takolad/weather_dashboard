@@ -90,8 +90,7 @@ if (typeof(savedSearches) === 'undefined' || savedSearches === null) {
     savedSearches = new Array();
 } else {
     for (var i = savedSearches.length - 1; i >= 0; i--) {
-        var listEl = $('<li>').attr('class', 'list-group-item').text(savedSearches[i]);
-        weatherHistoryEl.append(listEl);
+        addLocationToHistory(savedSearches[i]);
     }
 }
 
@@ -221,6 +220,10 @@ function displayCurrWeather() {
 
     // saves cities to localStorage
     localStorage.setItem('searches', JSON.stringify(savedSearches));
+    
+    if (savedSearches.length > 0 && !weatherHistoryEl.text().includes(cityName)) {
+        addLocationToHistory(cityName);
+    }
 }
 
 // displays 5 day weather
@@ -314,11 +317,14 @@ function displayWeeklyWeather () {
                 dayFiveEl.append(weeklyHumidEl);
                 break;
         }
-   }
+    }
 
 }
 
-
+function addLocationToHistory(location) {
+    let listEl = $('<li>').attr('class', 'list-group-item').text(location);
+    weatherHistoryEl.append(listEl);
+}
 
 // form submit handler
 formSearchEl.on('submit', formSubmitHandler);
