@@ -120,27 +120,21 @@ var formSubmitHandler = function (event) {
 
     cityName = cityName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
-    // if previously searched for, removes from array and pushes to the end so it is most recent search
-    if (savedSearches.includes(cityName)) {
-        var index = savedSearches.indexOf(cityName);
-        savedSearches.splice(index, 1);
-        savedSearches.push(cityName);
-    } else {
-        // if not already searched for adds to end of array
-        savedSearches.push(cityName);
-    }
     cityNameUri = cityName.replace(" ", "%20");
-    getCurrentWeather();
-    getWeeklyWeather();
+    getCurrentWeather().then(function (cityIsValid) {
+        if (cityIsValid) {
+            getWeeklyWeather();
+        }
+    });
 };
 
 function getCurrentWeather() {
     apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${cityNameUri}&units=imperial&appid=${key}`;
 
-    fetch(apiUrl)
+    return fetch(apiUrl)
         .then(function (response) {
             if (response.ok) {
-                response.json().then(function (data) {
+                return response.json().then(function (data) {
                     coord.lat = data.coord.lat;
                     coord.lon = data.coord.lon;
                     weather.icon = data.weather[0].icon;
@@ -152,17 +146,34 @@ function getCurrentWeather() {
                     apiUvUrl = `https://api.openweathermap.org/data/2.5/onecall?lat=${coord.lat}&lon=${coord.lon}&exclude={minutely,hourly,daily,alerts}&units=imperial&appid=${key}`;
                     iconUrl = `http://openweathermap.org/img/wn/${weather.icon}@2x.png`;
                     weather.desc = data.weather[0].description;
+                    saveSearch();
                     getUvIndex(coord.lat, coord.lon);
                     displayCurrWeather();
+                    return true;
                 });
             } else {
                 alert('Error: ' + response.statusText);
+                return false;
             }
         })
         .catch(function (error) {
             alert('Unable to connect to Open Weather Map');
+            return false;
         });
 };
+
+function saveSearch() {
+    if (savedSearches.includes(cityName)) {
+        var index = savedSearches.indexOf(cityName);
+        savedSearches.splice(index, 1);
+    }
+    savedSearches.push(cityName);
+    localStorage.setItem('searches', JSON.stringify(savedSearches));
+
+    if (!weatherHistoryEl.text().includes(cityName)) {
+        addLocationToHistory(cityName);
+    }
+}
 
 function getUvIndex(latitude, longitude) {
     fetch(apiUvUrl)
@@ -218,12 +229,6 @@ function displayCurrWeather() {
     currUvIndFieldEl.append($('<span>').addClass('uv').css('background-color',`${bgColor}`));
     $('.uv').text(`${uvIndex.uvi}`);
 
-    // saves cities to localStorage
-    localStorage.setItem('searches', JSON.stringify(savedSearches));
-    
-    if (savedSearches.length > 0 && !weatherHistoryEl.text().includes(cityName)) {
-        addLocationToHistory(cityName);
-    }
 }
 
 // displays 5 day weather
@@ -334,7 +339,10 @@ $(document).ready(function() {
     weatherHistoryEl.on('click', function (event) {
         cityName = event.target.textContent;
         cityNameUri = cityName.replace(" ", "%20");
-        getCurrentWeather();
-        getWeeklyWeather();
+        getCurrentWeather().then(function (cityIsValid) {
+            if (cityIsValid) {
+                getWeeklyWeather();
+            }
+        });
     });
 });
